@@ -16,6 +16,8 @@
 
 Application* Application::instance = NULL;
 Camera* Application::camera = nullptr;
+Texture* texturecube;
+
 
 float cam_speed = 10;
 bool render_wireframe = false;
@@ -51,13 +53,23 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	// Set mesh to node
 	Mesh* mesh = new Mesh();
 	mesh->createCube();
-	node->mesh = mesh;
+	node->mesh = mesh;	
+	
+	//Set Texture
+	texturecube = new Texture;
+	texturecube = Texture::Get("data/textures/normal.png");
+	
 
 	// Set material
 	StandardMaterial* material = new StandardMaterial();
-	material->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
+	material->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	node->material = material;
+	node->material->texture = texturecube;
+
+
 	
+
+
 	//hide the cursor
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
 }
