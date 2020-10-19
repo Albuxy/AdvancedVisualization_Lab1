@@ -24,26 +24,35 @@ void main()
 	//----Phong equation---
 
 	vec3 light = vec3(0.0);
-	vec3 ambient = vec3(0.0);
-	ambient = u_ambient_light;
 
-	
+		//--Ambient
+		vec3 ambient = vec3(0.0);
+		ambient = u_ambient_light;
+
 		//--Diffuse---
 		vec3 diffuse = vec3(0.0);
 		vec3 L;
 
 		//Ligh vector is the same for all pixels
+		//L = -u_light_vector;
 		L = normalize(u_light_position - v_world_position);
 		float NdotL = dot(N,L);
 		NdotL = clamp(NdotL, 0.0, 1.0);
 		diffuse = NdotL * u_light_color;
 
+		//--Specular--
+		vec3 specular = vec3(0.0);
+		vec3 V = normalize(u_camera_position - v_world_position);
+		vec3 R = normalize(reflect(-L, N));
+		float RdotV = dot(V,R);
+		RdotV = clamp(RdotV, 0.0, 1.0);
+		float spec = pow(RdotV, 32);
+		specular = spec * u_light_color;
+
 		//---Total Light----
-		light = ambient + diffuse;
+		light = ambient + diffuse + specular;
 		
-
 	color.xyz *= light;
-
 
 	gl_FragColor = color;
 }
