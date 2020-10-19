@@ -51,6 +51,10 @@ public:
 	void onGamepadButtonUp(SDL_JoyButtonEvent event);
 	void onResize(int width, int height);
 
+	void renderNode(Camera* camara, SceneNode* node);
+
+
+
 };
 
 

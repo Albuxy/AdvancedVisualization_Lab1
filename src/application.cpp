@@ -17,6 +17,7 @@
 Application* Application::instance = NULL;
 Camera* Application::camera = nullptr;
 Texture* texturecube;
+vec3 ambient_light;
 
 
 float cam_speed = 10;
@@ -30,6 +31,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	instance = this;
 	must_exit = false;
 	render_debug = true;
+	ambient_light = Vector3(0.1, 0.1, 0.1);
 
 	fps = 0;
 	frame = 0;
@@ -62,12 +64,10 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 
 	// Set material
 	StandardMaterial* material = new StandardMaterial();
-	material->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	material->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
 	node->material = material;
 	node->material->texture = texturecube;
 
-
-	
 
 
 	//hide the cursor
@@ -87,10 +87,11 @@ void Application::render(void)
 	camera->enable();
 
 	for (int i = 0; i < node_list.size(); i++) {
-		node_list[i]->render(camera);
+		//node_list[i]->render(camera);
 
 		if(render_wireframe)
 			node_list[i]->renderWireframe(camera);
+		renderNode(camera, node_list[i]);
 	}
 
 	//Draw the floor grid
@@ -230,3 +231,40 @@ void Application::onResize(int width, int height)
 	window_height = height;
 }
 
+void Application::renderNode(Camera* camara, SceneNode* node) {
+	
+	Mesh* mesh = node->mesh;
+	Shader* shader = node->material->shader;
+	Matrix44 model = node->model;
+	Texture* texture = node->material->texture;
+
+	//set flags
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+
+	if (mesh && shader)
+	{
+		//enable shader
+		shader->enable();
+
+		//upload node uniforms
+		shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+		shader->setUniform("u_camera_position", camera->eye);
+		shader->setUniform("u_model", model);
+		shader->setUniform("u_time", Application::instance->time);
+		shader->setUniform("u_ambient_light", ambient_light);
+		shader->setUniform("u_light_position", Vector3(20, 30, 0));
+		shader->setUniform("u_light_color", Vector3(0.5, 0.5, 0));
+
+		shader->setUniform("u_color", Vector3(1.0, 1.0, 1.0));
+
+		if (texture)
+			shader->setUniform("u_texture", texture);
+
+		//do the draw call
+		mesh->render(GL_TRIANGLES);
+
+		//disable shader
+		shader->disable();
+	}
+}
