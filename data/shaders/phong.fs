@@ -8,7 +8,7 @@ varying vec4 v_color;
 uniform vec4 u_color;
 uniform sampler2D u_texture;
 
-//Implement de phong
+//Implement atributes phong
 uniform vec3 u_ambient_light;
 uniform vec3 u_light_position;
 uniform vec3 u_light_color;
@@ -34,7 +34,6 @@ void main()
 		vec3 L;
 
 		//Ligh vector is the same for all pixels
-		//L = -u_light_vector;
 		L = normalize(u_light_position - v_world_position);
 		float NdotL = dot(N,L);
 		NdotL = clamp(NdotL, 0.0, 1.0);
