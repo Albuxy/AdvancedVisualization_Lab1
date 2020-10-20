@@ -17,11 +17,11 @@
 Application* Application::instance = NULL;
 Camera* Application::camera = nullptr;
 Texture* texturecube;
-vec3 ambient_light;
+
+//Globla Variables for Phong
 SceneNode* node_light;
-
+vec3 ambient_light;
 vec3 color_light;
-
 
 float cam_speed = 10;
 bool render_wireframe = false;
@@ -34,6 +34,8 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	instance = this;
 	must_exit = false;
 	render_debug = true;
+
+	//Phong equation global variables
 	ambient_light = Vector3(0.1, 0.1, 0.1);
 	color_light = Vector3(1.0, 1.0, 1.0);
 
@@ -60,16 +62,12 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 
 	// Set mesh to node
 	Mesh* mesh = new Mesh();
-	//mesh->createCube();
 	mesh = Mesh::Get("data/meshes/box.ASE");
 	node->mesh = mesh;
-
-
 
 	//Set Texture
 	texturecube = new Texture;
 	texturecube = Texture::Get("data/textures/normal.png");
-
 
 	// Set material
 	StandardMaterial* material = new StandardMaterial();
@@ -77,8 +75,8 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	node->material = material;
 	node->material->texture = texturecube;
 
+	//----Node Light Phong----
 	node_light = new SceneNode("Nodo Light");
-
 	// Set material node light
 	StandardMaterial* material_light = new StandardMaterial();
 	material_light->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
@@ -104,18 +102,19 @@ void Application::render(void)
 	camera->enable();
 
 	for (int i = 0; i < node_list.size(); i++) {
-		//node_list[i]->render(camera);
+	
 
 		if (render_wireframe)
 			node_list[i]->renderWireframe(camera);
-		renderNode(camera, node_list[i]);
+			//Function for the new node of the phong illumination
+			renderNode(camera, node_list[i]);
 	}
 
 	node_light->render(camera);
 
 	//Draw the floor grid
-	//if (render_debug)
-		//drawGrid();
+	if (render_debug)
+		drawGrid();
 }
 
 void Application::update(double seconds_elapsed)
@@ -178,6 +177,7 @@ void Application::renderInMenu()
 {
 	// Show and edit your global variables on the fly here
 	ImGui::ColorEdit3("Light Color", (float*)&color_light);
+	//Edit de global variables of the node of light
 	node_light->renderInMenu();
 }
 
@@ -272,17 +272,15 @@ void Application::renderNode(Camera* camara, SceneNode* node) {
 		shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
 		shader->setUniform("u_camera_position", camera->eye);
 		shader->setUniform("u_model", node->model);
-
 		shader->setUniform("u_color", node->material->color);
 
 		if (texture)
 			shader->setUniform("u_texture", texture);
 
+		//upload uniforms for the phong equation
 		shader->setUniform("u_ambient_light", ambient_light);
 		shader->setUniform("u_light_position", node_light->model.getTranslation());
 		shader->setUniform("u_light_color", color_light);
-
-
 
 		//do the draw call
 		mesh->render(GL_TRIANGLES);
