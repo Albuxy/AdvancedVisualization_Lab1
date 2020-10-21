@@ -53,6 +53,8 @@ public:
 
 	void renderNode(Camera* camara, SceneNode* node);
 
+	void renderSkybox(Camera* camara, SceneNode* node);
+
 
 
 };

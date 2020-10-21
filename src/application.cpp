@@ -17,6 +17,7 @@
 Application* Application::instance = NULL;
 Camera* Application::camera = nullptr;
 Texture* texturecube;
+Texture* skybox_texture;
 
 //Globla Variables for Phong
 SceneNode* node_light;
@@ -85,6 +86,10 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	node_light->model.scale(0.01, 0.01, 0.01);
 	node_light->mesh = mesh;
 
+	//Skybox
+	skybox_texture = new Texture;
+	skybox_texture->cubemapFromImages("data/environments/dragonvale");
+
 	//hide the cursor
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
 }
@@ -101,13 +106,17 @@ void Application::render(void)
 	//set the camera as default
 	camera->enable();
 
+	renderSkybox(camera, node_list[0]);
+
 	for (int i = 0; i < node_list.size(); i++) {
 	
 
 		if (render_wireframe)
 			node_list[i]->renderWireframe(camera);
+
 			//Function for the new node of the phong illumination
 			renderNode(camera, node_list[i]);
+			
 	}
 
 	node_light->render(camera);
@@ -288,4 +297,39 @@ void Application::renderNode(Camera* camara, SceneNode* node) {
 		//disable shader
 		shader->disable();
 	}
+}
+
+void Application::renderSkybox(Camera* camara, SceneNode* node) {
+
+	Mesh* mesh = node->mesh;
+	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
+	Matrix44 model;
+
+	model.setTranslation(camera->eye.x, camera->eye.y, camera->eye.z);
+
+	//set flags
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+
+	if (mesh && shader)
+	{
+		//enable shader
+		shader->enable();
+
+		//upload node uniforms
+		shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+		shader->setUniform("u_camera_position", camera->eye);
+		shader->setUniform("u_model", model);
+		
+		shader->setUniform("u_texture", skybox_texture);
+
+
+		//do the draw call
+		mesh->render(GL_TRIANGLES);
+
+		//disable shader
+		shader->disable();
+	}
+
+	glEnable(GL_DEPTH_TEST);
 }
