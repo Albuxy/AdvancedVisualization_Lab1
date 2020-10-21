@@ -26,6 +26,8 @@ vec3 color_light;
 
 float cam_speed = 10;
 bool render_wireframe = false;
+bool reflectionsActive = true;
+bool skyboxActive = true;
 
 Application::Application(int window_width, int window_height, SDL_Window* window)
 {
@@ -106,7 +108,8 @@ void Application::render(void)
 	//set the camera as default
 	camera->enable();
 
-	renderSkybox(camera, node_list[0]);
+	if(skyboxActive == true)
+		renderSkybox(camera, node_list[0]);
 
 	for (int i = 0; i < node_list.size(); i++) {
 	
@@ -188,6 +191,9 @@ void Application::renderInMenu()
 	ImGui::ColorEdit3("Light Color", (float*)&color_light);
 	//Edit de global variables of the node of light
 	node_light->renderInMenu();
+
+	ImGui::Checkbox("Reflections", &reflectionsActive);
+	ImGui::Checkbox("Skybox", &skyboxActive);
 }
 
 //Keyboard event handler (sync input)
